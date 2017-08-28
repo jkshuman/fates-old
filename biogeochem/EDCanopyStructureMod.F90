@@ -42,6 +42,7 @@ contains
 
   ! ============================================================================
   subroutine canopy_structure( currentSite , bc_in )
+
     !
     ! !DESCRIPTION:
     ! create cohort instance
@@ -205,6 +206,7 @@ contains
                 currentCohort => currentPatch%tallest
                 do while (associated(currentCohort))      
                    if(currentCohort%canopy_layer == i)then !All the trees in this layer need to lose some area...
+
                       if (ED_val_comp_excln .ge. 0) then
                          weight = currentCohort%excl_weight/sum_weights(i)
                          cc_loss = lossarea*weight !what this cohort has to lose. 
@@ -213,6 +215,7 @@ contains
                          cc_loss = currentCohort%excl_weight
                       endif
                       if (cc_loss > 0._r8) then
+
                       !-----------Split and copy boundary cohort-----------------!
                       if(cc_loss < currentCohort%c_area)then
                          allocate(copyc)
@@ -933,6 +936,7 @@ contains
  ! =====================================================================================
 
  subroutine leaf_area_profile( currentSite , snow_depth_si, frac_sno_eff_si)
+
     !
     ! !DESCRIPTION:
     !
@@ -1027,6 +1031,8 @@ contains
        currentPatch%nrad = currentPatch%ncan
 
        if(smooth_leaf_distribution == 1)then
+
+         !smooth_leaf_distribution 
           ! we are going to ignore the concept of canopy layers, and put all of the leaf area into height banded bins. 
           ! using the same domains as we had before, except that CL always = 1
           currentPatch%tlai_profile = 0._r8
@@ -1118,7 +1124,8 @@ contains
           endif
           
           
-       else ! smooth leaf distribution  
+       else ! smooth leaf distribution 
+ 
           !Go through all cohorts and add their leaf area and canopy area to the accumulators. 
           currentPatch%tlai_profile = 0._r8
           currentPatch%tsai_profile = 0._r8  
@@ -1263,9 +1270,15 @@ contains
                          currentPatch%canopy_area_profile(L,ft,iv)
                    currentPatch%esai_profile(L,ft,iv) = currentPatch%esai_profile(L,ft,iv) / &
                          currentPatch%canopy_area_profile(L,ft,iv)
-                   currentPatch%layer_height_profile(L,ft,iv) = currentPatch%layer_height_profile(L,ft,iv) &
-                         /currentPatch%tlai_profile(L,ft,iv)
-                enddo
+
+                   if ( currentPatch%tlai_profile(L,ft,iv) > 0.0_r8) then
+                      currentPatch%layer_height_profile(L,ft,iv) = currentPatch%layer_height_profile(L,ft,iv) &
+                            /currentPatch%tlai_profile(L,ft,iv)
+                   else if ( currentPatch%layer_height_profile(L,ft,iv) /= 0.0_r8 ) then
+                      write(fates_log(),*) 'layer_height_profile not zero, but diving by tlai_profile that is zero'
+                      call endrun(msg=errMsg(sourcefile, __LINE__))
+                   end if
+                 enddo
                 
                 currentPatch%tlai_profile(L,ft,currentPatch%nrad(L,ft)+1: nlevleaf) = 0._r8
                 currentPatch%tsai_profile(L,ft,currentPatch%nrad(L,ft)+1: nlevleaf) = 0._r8
@@ -1341,6 +1354,7 @@ contains
     enddo !patch       
 
     return
+
  end subroutine leaf_area_profile
 
  ! ======================================================================================

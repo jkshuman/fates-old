@@ -835,7 +835,7 @@ contains
                                 endif
                              enddo
                           enddo
-                          
+
                           if (radtype == 1)then
                              !here we are adding a within-ED radiation scheme tolerance, and then adding the diffrence onto the albedo
                              !it is important that the lower boundary for this is ~1000 times smaller than the tolerance in surface albedo. 

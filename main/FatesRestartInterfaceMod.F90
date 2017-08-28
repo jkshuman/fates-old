@@ -1766,7 +1766,7 @@ contains
              enddo
              
              if ( DEBUG ) write(fates_log(),*) 'CVTL io_idx_pa_sunz 1 ',io_idx_pa_sunz
-             
+    
              do k = 1,nlevleaf ! nlevleaf currently 40
                 do j = 1,numpft
                    do i = 1,nclmax ! nclmax currently 2
