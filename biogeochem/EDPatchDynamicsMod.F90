@@ -844,7 +844,8 @@ contains
     real(r8) :: bstem                ! amount of above ground stem biomass per cohort  kgC.(goes into CWG_AG)
     real(r8) :: dead_tree_density    ! no trees killed by fire per m2
     reaL(r8) :: burned_litter        ! amount of each litter pool burned by fire.  kgC/m2/day
-    real(r8) :: burned_leaves        ! amount of tissue consumed by fire for grass. KgC/individual/day
+    real(r8) :: burned_leaves        ! amount of leaf tissue consumed by fire. KgC/individual/day
+    real(r8) :: burned_sapwood       ! amount of sapwood consumed by fire. KgC/individual/day
     integer  :: c, p 
     !---------------------------------------------------------------------
 
@@ -995,19 +996,23 @@ contains
 
           call carea_allom(currentCohort%dbh,currentCohort%n,currentSite%spread,currentCohort%pft,currentCohort%c_area)
           if(EDPftvarcon_inst%woody(currentCohort%pft) == 1)then
-             burned_leaves = min(currentCohort%bl, (currentCohort%bl+currentCohort%bsw) * currentCohort%cfa)
+             burned_leaves  = min(currentCohort%bl, (currentCohort%bl * currentCohort%cfa)
+             burned_sapwood = min(currentCohort%bsw, (currentCohort%bsw * currentCohort%cfa)
           else
-             burned_leaves = min(currentCohort%bl, (currentCohort%bl+currentCohort%bsw) * currentPatch%burnt_frac_litter(6))
+             burned_leaves  = min(currentCohort%bl, (currentCohort%bl * currentPatch%burnt_frac_litter(6))
+             burned_sapwood = min(currentCohort%bsw, (currentCohort%bsw * currentPatch%burnt_frac_litter(6))
           endif
-          if (burned_leaves > 0.0_r8) then
+          if (burned_leaves > 0.0_r8 .or.
+              burned_sapwood > 0.0_r8 ) then
 
              currentCohort%bl     = currentCohort%bl - burned_leaves
+             currentCohort%bsw    = currentCohort%bsw - burned_sapwood
 
              !KgC/gridcell/day
-             currentSite%flux_out = currentSite%flux_out + burned_leaves * currentCohort%n * &
+             currentSite%flux_out = currentSite%flux_out + burned_leaves + burned_sapwood * currentCohort%n * &
                   patch_site_areadis/currentPatch%area * AREA 
-             currentSite%total_burn_flux_to_atm = currentSite%total_burn_flux_to_atm+ burned_leaves * currentCohort%n * &
-                  patch_site_areadis/currentPatch%area * AREA 
+             currentSite%total_burn_flux_to_atm = currentSite%total_burn_flux_to_atm+ burned_leaves + burned_sapwood * &
+                  currentCohort%n * patch_site_areadis/currentPatch%area * AREA 
 
           endif
           currentCohort%cfa = 0.0_r8        
